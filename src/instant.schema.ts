@@ -15,14 +15,35 @@ const _schema = i.schema({
             imageURL: i.string().optional(),
             type: i.string().optional(),
         }),
-        // Remove Better Auth-specific entities; keep core demo entities only
         todos: i.entity({
             text: i.string(),
             done: i.boolean(),
             createdAt: i.number(),
+            creatorId: i.string().indexed(),
+            guestId: i.string().optional().indexed(),
+        }),
+        profiles: i.entity({
+            joined: i.date(),
+            plan: i.string(),
+            firstName: i.string(),
+            lastName: i.string(),
+            googlePicture: i.string().optional(),
         }),
     },
     links: {
+        todosOwners: {
+            forward: {
+                on: "todos",
+                has: "one",
+                label: "owner",
+                onDelete: "cascade",
+            },
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "ownerTodos",
+            },
+        },
         $usersLinkedPrimaryUser: {
             forward: {
                 on: "$users",
@@ -34,6 +55,18 @@ const _schema = i.schema({
                 on: "$users",
                 has: "many",
                 label: "linkedGuestUsers",
+            },
+        },
+        userProfiles: {
+            forward: {
+                on: "profiles",
+                has: "one",
+                label: "user",
+            },
+            reverse: {
+                on: "$users",
+                has: "one",
+                label: "profile",
             },
         },
     },

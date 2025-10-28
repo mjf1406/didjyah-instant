@@ -14,6 +14,19 @@ function getInitials(firstName?: string, lastName?: string) {
 }
 
 export default function UserCard() {
+    return (
+        <>
+            <db.SignedIn>
+                <SignedInUserCard />
+            </db.SignedIn>
+            <db.SignedOut>
+                <GuestUserCard />
+            </db.SignedOut>
+        </>
+    );
+}
+
+function SignedInUserCard() {
     const user = db.useUser();
     const { data } = db.useQuery({
         profiles: {
@@ -21,7 +34,6 @@ export default function UserCard() {
         },
     });
     const profile = data?.profiles?.[0];
-
     const fullName = [profile?.firstName, profile?.lastName]
         .filter(Boolean)
         .join(" ");
@@ -44,6 +56,20 @@ export default function UserCard() {
                 <span className="text-xs text-gray-500">
                     {profile?.plan || "free"}
                 </span>
+            </div>
+        </div>
+    );
+}
+
+function GuestUserCard() {
+    return (
+        <div className="flex items-center gap-3">
+            <Avatar>
+                <AvatarFallback>?</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+                <span className="text-sm font-medium">Guest</span>
+                <span className="text-xs text-gray-500">free</span>
             </div>
         </div>
     );

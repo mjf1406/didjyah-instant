@@ -15,6 +15,7 @@ const _schema = i.schema({
             imageURL: i.string().optional(),
             type: i.string().optional(),
         }),
+        guests: i.entity({}),
         todos: i.entity({
             text: i.string(),
             done: i.boolean(),
@@ -42,6 +43,19 @@ const _schema = i.schema({
                 on: "$users",
                 has: "many",
                 label: "ownerTodos",
+            },
+        },
+        todosGuests: {
+            forward: {
+                on: "todos",
+                has: "one",
+                label: "guest",
+                onDelete: "cascade",
+            },
+            reverse: {
+                on: "guests",
+                has: "many",
+                label: "guestTodos",
             },
         },
         $usersLinkedPrimaryUser: {

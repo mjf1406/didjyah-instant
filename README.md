@@ -1,15 +1,4 @@
-# Welcome to your InstantDB NextJS app 👋
+<!-- @format -->
 
-This is a NextJS project scaffolded with create-instant-app.
-
-To run the development server:
-`npm run dev`
-
-To push schema changes:
-`npx instant-cli push`
-
-To pull schema changes:
-`npx instant-cli pull`
-
-
-Got any feedback or questions? Join our [Discord](https://discord.gg/hgVf9R6SBm)
+-   [ ] BUG: guests can no longer create more than 5 todos
+-   [ ] UX: user is now alerted to why they cannot create more than 5 todos

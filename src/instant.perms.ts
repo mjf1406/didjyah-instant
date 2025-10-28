@@ -54,10 +54,10 @@ const rules = {
     },
     todos: {
         allow: {
-            view: "isAuthenticated",
+            view: "isAuthenticated || data.guestId != null",
             create: "size(data.ref('owner.ownerTodos.id')) < 6 || isPremium",
-            update: "isCreator && isStillCreator && isPremium",
-            delete: "isCreator",
+            update: "(isCreator && isStillCreator && isPremium) || data.guestId != null",
+            delete: "isCreator || data.guestId != null",
         },
         bind: commonBind,
     },

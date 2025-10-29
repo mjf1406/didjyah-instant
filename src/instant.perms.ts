@@ -54,12 +54,21 @@ const rules = {
     },
     todos: {
         allow: {
-            view: "isAuthenticated || data.guestId != null",
-            create: "size(data.ref('owner.ownerTodos.id')) < 6 || isPremium",
-            update: "(isCreator && isStillCreator && isPremium) || data.guestId != null",
-            delete: "isCreator || data.guestId != null",
+            view: "isOwner || isGuestOwner",
+            create: "isAuthenticated && (size(data.ref('owner.ownerTodos.id')) < 6 || isPremium)",
+            update: "isOwner || isGuestOwner",
+            delete: "isOwner || isGuestOwner",
         },
-        bind: commonBind,
+        bind: [
+            "isAuthenticated",
+            "auth.id != null",
+            "isOwner",
+            "data.owner == auth.id",
+            "isGuestOwner",
+            "data.owner in auth.ref('$user.linkedGuestUsers.id')",
+            "isPremium",
+            "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
+        ],
     },
 } satisfies InstantRules;
 

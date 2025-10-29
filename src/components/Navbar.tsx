@@ -153,6 +153,14 @@ function NavbarSignedIn() {
                     <Link href="/app/account">Account</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {user.isGuest ? (
+                    <>
+                        <DropdownMenuItem asChild>
+                            <Link href="/app/login">Sign in with Google</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                    </>
+                ) : null}
                 <DropdownMenuItem
                     onSelect={(e) => {
                         e.preventDefault();

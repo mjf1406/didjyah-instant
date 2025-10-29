@@ -80,6 +80,26 @@ export default function LoginPage() {
                         />
                     </GoogleOAuthProvider>
                 </div>
+                <div className="mt-6">
+                    <button
+                        onClick={async () => {
+                            try {
+                                await db.auth.signInAsGuest();
+                                router.push("/app");
+                            } catch (err: any) {
+                                alert(
+                                    "Uh oh: " +
+                                        (err?.body?.message ||
+                                            err?.message ||
+                                            String(err))
+                                );
+                            }
+                        }}
+                        className="w-full bg-gray-800 px-3 py-2 font-semibold text-white hover:bg-gray-900 rounded-md"
+                    >
+                        Try before signing up
+                    </button>
+                </div>
             </div>
         </div>
     );

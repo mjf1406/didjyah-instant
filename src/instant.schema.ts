@@ -15,13 +15,13 @@ const _schema = i.schema({
             imageURL: i.string().optional(),
             type: i.string().optional(),
         }),
-        guests: i.entity({}),
+        // guests: i.entity({}),
         todos: i.entity({
             text: i.string(),
             done: i.boolean(),
             createdAt: i.number(),
             creatorId: i.string().indexed(),
-            guestId: i.string().optional().indexed(),
+            // guestId: i.string().optional().indexed(),
         }),
         profiles: i.entity({
             joined: i.date(),
@@ -45,19 +45,19 @@ const _schema = i.schema({
                 label: "ownerTodos",
             },
         },
-        todosGuests: {
-            forward: {
-                on: "todos",
-                has: "one",
-                label: "guest",
-                onDelete: "cascade",
-            },
-            reverse: {
-                on: "guests",
-                has: "many",
-                label: "guestTodos",
-            },
-        },
+        // todosGuests: {
+        //     forward: {
+        //         on: "todos",
+        //         has: "one",
+        //         label: "guest",
+        //         onDelete: "cascade",
+        //     },
+        //     reverse: {
+        //         on: "guests",
+        //         has: "many",
+        //         label: "guestTodos",
+        //     },
+        // },
         $usersLinkedPrimaryUser: {
             forward: {
                 on: "$users",

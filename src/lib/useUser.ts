@@ -13,12 +13,22 @@ type UseUserResult = {
 
 export function useUserWithProfile(): UseUserResult {
     const user = db.useUser();
-    const { data, isLoading, error } = db.useQuery({
+    const {
+        data,
+        isLoading,
+        error: queryError,
+    } = db.useQuery({
         profiles: {
             $: { where: { "user.id": user.id } },
         },
     });
     const profile = data?.profiles?.[0];
 
-    return { user, profile, isLoading, error };
+    const normalizedError: Error | undefined = queryError
+        ? queryError instanceof Error
+            ? queryError
+            : new Error((queryError as any)?.message ?? String(queryError))
+        : undefined;
+
+    return { user, profile, isLoading, error: normalizedError };
 }

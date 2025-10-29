@@ -8,7 +8,9 @@
         "start": "next start",
         "lint": "next lint",
         "pushschema": "npx instant-cli@latest push schema",
+        "ps": "npx instant-cli@latest push schema",
         "pushperms": "npx instant-cli@latest push perms",
+        "pp": "npx instant-cli@latest push perms",
         "bs": "npm run build && npm run start"
     },
     "dependencies": {
@@ -16,6 +18,7 @@
         "@instantdb/react": "latest",
         "@radix-ui/react-avatar": "^1.1.10",
         "@radix-ui/react-dropdown-menu": "^2.1.16",
+        "@radix-ui/react-slot": "^1.2.3",
         "@radix-ui/react-switch": "^1.2.6",
         "@react-oauth/google": "^0.12.1",
         "class-variance-authority": "^0.7.1",

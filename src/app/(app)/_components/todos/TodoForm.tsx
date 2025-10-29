@@ -3,10 +3,7 @@
 "use client";
 
 import React from "react";
-import { type InstaQLEntity } from "@instantdb/react";
-import type { AppSchema } from "@/instant.schema";
-
-type Todo = InstaQLEntity<AppSchema, "todos">;
+import type { Todo } from "@/lib/types";
 
 export default function TodoForm({
     todos,

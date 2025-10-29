@@ -2,20 +2,19 @@
 
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { id, type InstaQLEntity } from "@instantdb/react";
+import React, { useCallback, useEffect, useState } from "react";
+import { id } from "@instantdb/react";
 import { db } from "@/lib/db";
-import type { AppSchema } from "@/instant.schema";
-import TodoForm from "@/components/todos/TodoForm";
-import TodoList from "@/components/todos/TodoList";
-import TodoActionBar from "@/components/todos/TodoActionBar";
-import UserCard from "@/components/user/UserCard";
-import EnsureProfile from "@/components/user/EnsureProfile";
-import { Button } from "./ui/button";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import TodoForm from "@/app/(app)/_components/todos/TodoForm";
+import TodoList from "@/app/(app)/_components/todos/TodoList";
+import TodoActionBar from "@/app/(app)/_components/todos/TodoActionBar";
+import UserCard from "@/app/(app)/_components/user/UserCard";
+import EnsureProfile from "@/app/(app)/_components/user/EnsureProfile";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-
-type Todo = InstaQLEntity<AppSchema, "todos">;
+import GoogleSignIn from "@/app/(app)/_components/auth/GoogleSignIn";
+import { getErrorMessage } from "@/lib/errors";
+import type { Todo, UserWithGuests } from "@/lib/types";
 
 const room = db.room("todos");
 
@@ -39,23 +38,6 @@ function AuthedApp() {
     const [nonce] = useState<string>(crypto.randomUUID());
     const router = useRouter();
 
-    type JWTResponse = {
-        given_name: string;
-        family_name: string;
-        picture?: string | undefined;
-    };
-
-    function parseIdToken(idToken: string): JWTResponse {
-        const base64Url = idToken.split(".")[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const padded = base64.padEnd(
-            base64.length + ((4 - (base64.length % 4)) % 4),
-            "="
-        );
-        const decoded = atob(padded);
-        return JSON.parse(decoded);
-    }
-
     const handleOwnedTodos = useCallback(
         (ts: Todo[]) => {
             setOwnedTodos(ts);
@@ -75,12 +57,11 @@ function AuthedApp() {
             creatorId: user.id,
         });
         setNotice(null);
-        db.transact(tx.link({ owner: user.id })).catch((err: any) => {
-            const message = err?.body?.message ?? err?.message ?? "";
+        db.transact(tx.link({ owner: user.id })).catch((err) => {
+            const message = getErrorMessage(err);
             const permsFailed =
-                typeof message === "string" &&
-                (message.includes("perms-pass") ||
-                    message.toLowerCase().includes("permission denied"));
+                message.includes("perms-pass") ||
+                message.toLowerCase().includes("permission denied");
             if (permsFailed && ownedTodos.length >= 5) {
                 setNotice("Upgrade for more todos");
             }
@@ -127,52 +108,12 @@ function AuthedApp() {
                     <div className="text-xs text-gray-500 mb-2 text-center">
                         Continue with Google to save your todos permanently
                     </div>
-                    <GoogleOAuthProvider
-                        clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
-                    >
-                        <div className="flex justify-center">
-                            <GoogleLogin
-                                nonce={nonce}
-                                onError={() => alert("Login failed")}
-                                onSuccess={async ({ credential }) => {
-                                    if (!credential) return;
-                                    try {
-                                        const parsed = parseIdToken(credential);
-                                        const { user: authedUser } =
-                                            await db.auth.signInWithIdToken({
-                                                clientName:
-                                                    process.env
-                                                        .NEXT_PUBLIC_GOOGLE_CLIENT_NAME!,
-                                                idToken: credential,
-                                                nonce,
-                                            });
-                                        await db.transact(
-                                            db.tx.profiles[authedUser.id]
-                                                .update({
-                                                    firstName:
-                                                        parsed.given_name,
-                                                    lastName:
-                                                        parsed.family_name,
-                                                    googlePicture:
-                                                        parsed.picture,
-                                                    joined: new Date(),
-                                                    plan: "free",
-                                                })
-                                                .link({ user: authedUser.id })
-                                        );
-                                        router.refresh();
-                                    } catch (err: any) {
-                                        alert(
-                                            "Uh oh: " +
-                                                (err?.body?.message ||
-                                                    err?.message ||
-                                                    String(err))
-                                        );
-                                    }
-                                }}
-                            />
-                        </div>
-                    </GoogleOAuthProvider>
+                    <div className="flex justify-center">
+                        <GoogleSignIn
+                            nonce={nonce}
+                            onSuccess={() => router.refresh()}
+                        />
+                    </div>
                 </div>
             ) : null}
             <div className="border border-gray-300 max-w-xs w-full">
@@ -238,9 +179,9 @@ function OwnedTodosData({ onTodos }: { onTodos: (todos: Todo[]) => void }) {
             linkedGuestUsers: {},
         },
     });
+    const userWithGuests = userData?.$users?.[0] as UserWithGuests | undefined;
     const guestIds: string[] =
-        (userData?.$users?.[0]?.linkedGuestUsers || []).map((u: any) => u.id) ||
-        [];
+        userWithGuests?.linkedGuestUsers?.map((u) => u.id) ?? [];
     const guestIdsOrNone = guestIds.length ? guestIds : ["__none__"];
 
     const {
@@ -287,8 +228,11 @@ function MigrateGuestTodos() {
                         linkedGuestUsers: {},
                     },
                 });
+                const userWithGuests = $users?.[0] as
+                    | UserWithGuests
+                    | undefined;
                 const guestIds: string[] = (
-                    ($users?.[0]?.linkedGuestUsers as any[]) || []
+                    userWithGuests?.linkedGuestUsers ?? []
                 ).map((u) => u.id);
                 if (!guestIds.length) return;
 
@@ -302,7 +246,7 @@ function MigrateGuestTodos() {
                 });
                 if (!todos?.length) return;
 
-                const txes = (todos as any[]).map((t) =>
+                const txes = (todos as Todo[]).map((t) =>
                     db.tx.todos[t.id].link({ owner: user.id })
                 );
                 await db.transact(txes);
@@ -315,89 +259,4 @@ function MigrateGuestTodos() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id, user?.isGuest]);
     return null;
-}
-
-function Upgrade() {
-    const [sentEmail, setSentEmail] = React.useState("");
-    return (
-        <div className="mt-2">
-            <div className="text-xs text-gray-500 mb-2 text-center">
-                Upgrade to keep your todos across devices
-            </div>
-            {!sentEmail ? (
-                <EmailStep onSendEmail={setSentEmail} />
-            ) : (
-                <CodeStep sentEmail={sentEmail} />
-            )}
-        </div>
-    );
-}
-
-function EmailStep({ onSendEmail }: { onSendEmail: (email: string) => void }) {
-    const inputRef = React.useRef<HTMLInputElement>(null);
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const inputEl = inputRef.current!;
-        const email = inputEl.value;
-        onSendEmail(email);
-        db.auth.sendMagicCode({ email }).catch((err: any) => {
-            alert(
-                "Uh oh :" + (err?.body?.message || err?.message || String(err))
-            );
-            onSendEmail("");
-        });
-    };
-    return (
-        <form
-            key="email"
-            onSubmit={handleSubmit}
-            className="flex flex-col space-y-2 max-w-xs w-full"
-        >
-            <input
-                ref={inputRef}
-                type="email"
-                className="w-full border border-gray-300 px-3 py-1"
-                placeholder="Enter your email"
-                required
-                autoFocus
-            />
-            <Button type="submit">Send Code</Button>
-        </form>
-    );
-}
-
-function CodeStep({ sentEmail }: { sentEmail: string }) {
-    const inputRef = React.useRef<HTMLInputElement>(null);
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const inputEl = inputRef.current!;
-        const code = inputEl.value;
-        db.auth
-            .signInWithMagicCode({ email: sentEmail, code })
-            .catch((err: any) => {
-                inputEl.value = "";
-                alert(
-                    "Uh oh :" +
-                        (err?.body?.message || err?.message || String(err))
-                );
-            });
-    };
-
-    return (
-        <form
-            key="code"
-            onSubmit={handleSubmit}
-            className="flex flex-col space-y-2 max-w-xs w-full"
-        >
-            <input
-                ref={inputRef}
-                type="text"
-                className="w-full border border-gray-300 px-3 py-1"
-                placeholder="123456..."
-                required
-                autoFocus
-            />
-            <Button type="submit">Verify Code</Button>
-        </form>
-    );
 }

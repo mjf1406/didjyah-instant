@@ -27,14 +27,22 @@ type DidjyahWithRecords = InstaQLEntity<
 
 interface DeleteDidjyahAlertDialogProps {
   detail: DidjyahWithRecords;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const DeleteDidjyahAlertDialog: React.FC<DeleteDidjyahAlertDialogProps> = ({
   detail,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }) => {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
   const handleDelete = async () => {
     try {
       await db.transact(db.tx.didjyahs[detail.id].delete());
+      setOpen(false);
     } catch (error) {
       const message =
         error instanceof Error
@@ -45,12 +53,14 @@ const DeleteDidjyahAlertDialog: React.FC<DeleteDidjyahAlertDialogProps> = ({
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button id={`delete-${detail.id}`} variant={"ghost"} size={"icon"}>
-          <Trash />
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      {controlledOpen === undefined && (
+        <AlertDialogTrigger asChild>
+          <Button id={`delete-${detail.id}`} variant={"ghost"} size={"icon"}>
+            <Trash />
+          </Button>
+        </AlertDialogTrigger>
+      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {detail.name}?</AlertDialogTitle>

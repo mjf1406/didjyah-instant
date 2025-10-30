@@ -56,10 +56,14 @@ type DidjyahFormValues = z.infer<typeof didjyahSchema>;
 
 interface EditDidjyahDialogProps {
     didjyah: DidjyahWithRecords;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
-export function EditDidjyahDialog({ didjyah }: EditDidjyahDialogProps) {
-    const [open, setOpen] = React.useState(false);
+export function EditDidjyahDialog({ didjyah, open: controlledOpen, onOpenChange: controlledOnOpenChange }: EditDidjyahDialogProps) {
+    const [internalOpen, setInternalOpen] = React.useState(false);
+    const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const setOpen = controlledOnOpenChange || setInternalOpen;
     const form = useForm<DidjyahFormValues>({
         resolver: zodResolver(didjyahSchema),
         defaultValues: {
@@ -174,14 +178,14 @@ export function EditDidjyahDialog({ didjyah }: EditDidjyahDialogProps) {
         <DialogDrawer
             open={open}
             onOpenChange={setOpen}
-            trigger={
+            trigger={controlledOpen === undefined ? (
                 <Button
                     variant="ghost"
                     size={"icon"}
                 >
                     <Edit />
                 </Button>
-            }
+            ) : undefined}
             className="overflow-y-auto sm:max-w-[425px]"
         >
             <DialogHeader>

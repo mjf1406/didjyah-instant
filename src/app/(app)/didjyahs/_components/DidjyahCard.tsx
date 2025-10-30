@@ -11,6 +11,13 @@ import EditDidjyahDialog from "./EditDidjyahDialog";
 import { Button } from "@/components/ui/button";
 import SinceStopwatch from "./SinceStopWatch";
 import DeleteDidjyahAlertDialog from "./DeleteDidjyahAlertDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Edit, Trash } from "lucide-react";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
 
@@ -26,6 +33,8 @@ interface DidjyahCardProps {
 
 const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
   const user = db.useUser();
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
   // Parse the icon from the stored string "prefix|iconName"
   let iconComponent: React.ReactNode = null;
@@ -168,10 +177,27 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
                 icon={["fas", "play"]}
               />
             </Button>
-            {/* Edit */}
-            <EditDidjyahDialog didjyah={detail} />
-            {/* Delete */}
-            <DeleteDidjyahAlertDialog detail={detail} />
+            {/* Action Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeleteDialogOpen(true)}
+                  variant="destructive"
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -184,6 +210,17 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
           />
         )}
       </div>
+      {/* Dialogs - controlled by dropdown menu */}
+      <EditDidjyahDialog 
+        didjyah={detail} 
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+      <DeleteDidjyahAlertDialog 
+        detail={detail}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </div>
   );
 };

@@ -3,9 +3,15 @@
 "use client";
 
 import React from "react";
-import { db } from "@/lib/db";
-import SignedInApp from "@/app/(app)/_components/SignedInApp";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function App() {
-    return <SignedInApp />;
+    const router = useRouter();
+    
+    useEffect(() => {
+        router.push("/todo");
+    }, [router]);
+
+    return null;
 }

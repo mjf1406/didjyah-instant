@@ -4,7 +4,7 @@
 
 import type { InstantRules } from "@instantdb/react";
 
-const adminBind = [
+const commonBind = [
     "isAuthenticated",
     "auth.id != null",
     "isCreator",
@@ -12,20 +12,11 @@ const adminBind = [
     "isStillCreator",
     "auth.id != null && auth.id == newData.creatorId",
     "isOwner",
-    "auth.id != null && auth.id == data.id",
-    "isStillOwner",
-    "auth.id != null && auth.id == newData.id",
-    "isPremium",
-    "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
-];
-
-const dataBind = [
-    "isAuthenticated",
-    "auth.id != null",
-    "isOwner",
     "data.owner == auth.id",
     "isGuestOwner",
     "data.owner in auth.ref('$user.linkedGuestUsers.id')",
+    "isStillOwner",
+    "auth.id != null && auth.id == newData.id",
     "isPremium",
     "auth.ref('$user.profile.plan').exists(p, p in ['basic', 'plus', 'pro'])",
 ];
@@ -43,7 +34,7 @@ const rules = {
             update: "isAuthenticated",
             delete: "isAuthenticated",
         },
-        bind: adminBind,
+        bind: commonBind,
     },
     $users: {
         allow: {
@@ -52,7 +43,7 @@ const rules = {
             delete: "false",
             update: "false",
         },
-        bind: adminBind,
+        bind: commonBind,
     },
     userProfiles: {
         allow: {
@@ -61,7 +52,7 @@ const rules = {
             update: "isOwner",
             delete: "isOwner",
         },
-        bind: adminBind,
+        bind: commonBind,
     },
     todos: {
         allow: {
@@ -70,7 +61,7 @@ const rules = {
             update: "isOwner || isGuestOwner",
             delete: "isOwner || isGuestOwner",
         },
-        bind: dataBind,
+        bind: commonBind,
     },
     didjyahs: {
         allow: {
@@ -79,16 +70,16 @@ const rules = {
             update: "isOwner || isGuestOwner",
             delete: "isOwner || isGuestOwner",
         },
-        bind: dataBind,
+        bind: commonBind,
     },
-    didjyahRecords: {
+    didjyah_records: {
         allow: {
             view: "isOwner || isGuestOwner",
             create: "isAuthenticated && (size(data.ref('owner.ownerTodos.id')) < 6 || isPremium)",
             update: "isOwner || isGuestOwner",
             delete: "isOwner || isGuestOwner",
         },
-        bind: dataBind,
+        bind: commonBind,
     },
 } satisfies InstantRules;
 

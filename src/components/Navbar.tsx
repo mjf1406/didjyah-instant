@@ -52,10 +52,16 @@ export default function Navbar() {
                 {/* Center: Links */}
                 <nav className="hidden md:flex items-center gap-6 text-sm">
                     <Link
-                        href="/app"
+                        href="/todo"
                         className="hover:underline"
                     >
-                        App
+                        Todos
+                    </Link>
+                    <Link
+                        href="/didjyah"
+                        className="hover:underline"
+                    >
+                        DidjYah
                     </Link>
                     <Link
                         href="/about"

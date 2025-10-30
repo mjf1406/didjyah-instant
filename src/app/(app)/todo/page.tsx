@@ -8,7 +8,6 @@ import { db } from "@/lib/db";
 import TodoForm from "@/app/(app)/_components/todos/TodoForm";
 import TodoList from "@/app/(app)/_components/todos/TodoList";
 import TodoActionBar from "@/app/(app)/_components/todos/TodoActionBar";
-import UserCard from "@/app/(app)/_components/user/UserCard";
 import EnsureProfile from "@/app/(app)/_components/user/EnsureProfile";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -18,7 +17,7 @@ import type { Todo, UserWithGuests } from "@/lib/types";
 
 const room = db.room("todos");
 
-export default function SignedInApp() {
+export default function TodoPage() {
     return (
         <>
             <db.SignedIn>
@@ -259,3 +258,4 @@ function MigrateGuestTodos() {
     }, [user?.id, user?.isGuest]);
     return null;
 }
+

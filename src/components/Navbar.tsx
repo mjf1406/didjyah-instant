@@ -2,9 +2,10 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { db } from "@/lib/db";
 import { useUserWithProfile } from "@/lib/useUser";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -17,6 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CreateDidjyahDialog } from "@/app/(app)/didjyahs/_components/CreateDidjyahDialog";
 
 // Google login is handled on the /login page
 
@@ -28,6 +30,9 @@ function getInitials(firstName?: string, lastName?: string) {
 }
 
 export default function Navbar() {
+    const pathname = usePathname();
+    const isDidjyahRoute = pathname === "/didjyah";
+
     return (
         <header className="border-b border-gray-200 dark:border-gray-800">
             <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
@@ -85,6 +90,11 @@ export default function Navbar() {
 
                 {/* Right: Auth */}
                 <div className="flex items-center gap-3">
+                    {isDidjyahRoute && (
+                        <db.SignedIn>
+                            <CreateDidjyahDialog />
+                        </db.SignedIn>
+                    )}
                     <ThemeToggle />
                     <db.SignedOut>
                         <Link

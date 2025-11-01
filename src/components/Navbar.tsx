@@ -43,10 +43,10 @@ export default function Navbar() {
                         className="flex items-center gap-2"
                     >
                         <Image
-                            src="/vercel.svg"
+                            src="/didjyah-logo.svg"
                             alt="DidjYah"
-                            width={24}
-                            height={24}
+                            width={32}
+                            height={32}
                         />
                         <span className="font-semibold tracking-tight">
                             DidjYah

@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Edit, Trash, BarChart3 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
 
@@ -34,7 +34,6 @@ interface DidjyahCardProps {
 
 const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
   const user = db.useUser();
-  const router = useRouter();
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
@@ -187,9 +186,11 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/didjyah/${detail.id}`)}>
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  View Dashboard
+                <DropdownMenuItem asChild>
+                  <Link href={`/didjyah/${detail.id}`} prefetch={true}>
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    View Dashboard
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
                   <Edit className="mr-2 h-4 w-4" />

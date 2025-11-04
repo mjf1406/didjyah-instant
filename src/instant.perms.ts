@@ -75,7 +75,7 @@ const rules = {
     didjyahs: {
         allow: {
             view: "isOwner || isGuestOwner",
-            create: "isAuthenticated && (size(data.ref('owner.ownerTodos.id')) < 6 || isPremium)",
+            create: "isAuthenticated && (size(data.ref('owner.didjyahs.id')) < 6 || isPremium)",
             update: "isOwner || isGuestOwner",
             delete: "isOwner || isGuestOwner",
         },
@@ -84,7 +84,7 @@ const rules = {
     didjyahRecords: {
         allow: {
             view: "isOwner || isGuestOwner",
-            create: "isAuthenticated && (size(data.ref('owner.ownerTodos.id')) < 6 || isPremium)",
+            create: "isAuthenticated",
             update: "isOwner || isGuestOwner",
             delete: "isOwner || isGuestOwner",
         },

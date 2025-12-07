@@ -2,7 +2,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -27,6 +27,27 @@ function getInitials(firstName?: string, lastName?: string) {
     const l = (lastName || "").trim();
     if (!f && !l) return "?";
     return `${f[0] || ""}${l[0] || ""}`.toUpperCase();
+}
+
+function Clock() {
+    const [time, setTime] = useState<string>("");
+
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, "0");
+            const minutes = now.getMinutes().toString().padStart(2, "0");
+            const seconds = now.getSeconds().toString().padStart(2, "0");
+            setTime(`${hours}:${minutes}:${seconds}`);
+        };
+
+        updateTime();
+        const interval = setInterval(updateTime, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    return <div className="font-mono text-sm tabular-nums">{time}</div>;
 }
 
 export default function Navbar() {
@@ -90,6 +111,7 @@ export default function Navbar() {
 
                 {/* Right: Auth */}
                 <div className="flex items-center gap-3">
+                    <Clock />
                     {isDidjyahRoute && (
                         <db.SignedIn>
                             <CreateDidjyahDialog />

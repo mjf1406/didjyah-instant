@@ -1,4 +1,10 @@
 <!-- @format -->
 
--   BUG: guests can no longer create more than 5 todos
--   UX: user is now alerted to why they cannot create more than 5 todos
+# DidjYah
+
+## Change Log
+
+### 2026/01/03
+
+-   Added double tap detection to the didjyah card
+-   Added the grid view and grid/list toggle

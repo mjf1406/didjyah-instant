@@ -75,6 +75,14 @@ const DidjyahList: React.FC = () => {
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2">
+      {/* Instructions for Grid View */}
+      {isGridView && (
+        <div className="w-full px-4 py-2 text-center">
+          <p className="text-xs text-muted-foreground">
+            Tap a card to do it • Tap and hold to open the action menu
+          </p>
+        </div>
+      )}
       {/* Cards Container */}
       <div
         className={`w-full ${

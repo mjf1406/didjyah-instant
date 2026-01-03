@@ -79,7 +79,7 @@ const DidjyahList: React.FC = () => {
       {isGridView && (
         <div className="w-full px-4 py-2 text-center">
           <p className="text-xs text-muted-foreground">
-            Tap a card to do it • Tap and hold to open the action menu
+            Double tap a card to do it • Tap and hold to open the action menu
           </p>
         </div>
       )}

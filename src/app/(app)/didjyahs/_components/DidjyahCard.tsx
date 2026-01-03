@@ -45,6 +45,10 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
     const pressStartRef = React.useRef<{ x: number; y: number } | null>(null);
     const hasLongPressedRef = React.useRef(false);
 
+    // Double tap detection
+    const lastTapTimeRef = React.useRef<number>(0);
+    const doubleTapDelay = 300; // milliseconds
+
     // Parse the icon from the stored string "prefix|iconName"
     let iconComponent: React.ReactNode = null;
     if (detail.icon) {
@@ -97,24 +101,35 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
             e.stopPropagation();
         }
 
-        try {
-            const now = Date.now();
-            await db.transact(
-                db.tx.didjyahRecords[id()]
-                    .update({
-                        createdDate: now,
-                        updatedDate: now,
-                        endDate: now,
-                    })
-                    .link({ didjyah: detail.id })
-                    .link({ owner: user.id })
-            );
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : "An error occurred while adding the record.";
-            toast.error(message);
+        // Double tap detection
+        const now = Date.now();
+        const timeSinceLastTap = now - lastTapTimeRef.current;
+
+        if (timeSinceLastTap < doubleTapDelay && timeSinceLastTap > 0) {
+            // This is a double tap - execute the action
+            lastTapTimeRef.current = 0; // Reset to prevent triple tap
+            try {
+                const timestamp = Date.now();
+                await db.transact(
+                    db.tx.didjyahRecords[id()]
+                        .update({
+                            createdDate: timestamp,
+                            updatedDate: timestamp,
+                            endDate: timestamp,
+                        })
+                        .link({ didjyah: detail.id })
+                        .link({ owner: user.id })
+                );
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "An error occurred while adding the record.";
+                toast.error(message);
+            }
+        } else {
+            // First tap - record the time and wait for potential second tap
+            lastTapTimeRef.current = now;
         }
     };
 
@@ -192,7 +207,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                     ? "w-full flex-col cursor-pointer"
                     : "w-full max-w-[450px] flex-row"
             }`}
-            onClick={isGrid ? handlePlayClick : undefined}
+            onClick={isGrid ? (e) => handlePlayClick(e) : undefined}
             onTouchStart={(e) => {
                 if (isGrid) {
                     const touch = e.touches[0];

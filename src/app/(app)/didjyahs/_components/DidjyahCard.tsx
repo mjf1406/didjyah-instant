@@ -56,9 +56,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                     icon={[prefix as IconPrefix, iconName as IconName]}
                     style={{ color: detail.iconColor ?? "#000000" }}
                     className={
-                        viewMode === "grid"
-                            ? "text-base"
-                            : "text-3xl md:text-5xl"
+                        viewMode === "grid" ? "text-lg" : "text-3xl md:text-5xl"
                     }
                 />
             );
@@ -67,7 +65,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
     // Fallback if no icon is set
     iconComponent ??= (
         <span
-            className={viewMode === "grid" ? "text-xs" : "text-xs md:text-2xl"}
+            className={viewMode === "grid" ? "text-sm" : "text-xs md:text-2xl"}
         >
             ❓
         </span>
@@ -260,14 +258,14 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                             <>
                                 <span
                                     id={`name-${detail.id}`}
-                                    className="font-semibold truncate text-[9px]"
+                                    className="font-semibold truncate text-[10px]"
                                 >
                                     {detail.name}
                                 </span>
                                 {detail.sinceLast &&
                                     lastRecord &&
                                     lastRecord.createdDate && (
-                                        <span className="text-[7px] truncate">
+                                        <span className="text-[8px] truncate">
                                             <SinceStopwatch
                                                 startDateTime={
                                                     lastRecord.createdDate
@@ -300,7 +298,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                         <span
                             id={`performedToday-${detail.id}`}
                             className={`${
-                                isGrid ? "text-[8px]" : "text-[10px] md:text-xs"
+                                isGrid ? "text-[9px]" : "text-[10px] md:text-xs"
                             }`}
                         >
                             <b>

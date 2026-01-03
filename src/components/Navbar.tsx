@@ -115,10 +115,10 @@ export default function Navbar() {
                     <Clock />
                     {isDidjyahRoute && (
                         <db.SignedIn>
-                            <ViewToggle />
                             <CreateDidjyahDialog />
                         </db.SignedIn>
                     )}
+                    <ViewToggle />
                     <ThemeToggle />
                     <db.SignedOut>
                         <Link

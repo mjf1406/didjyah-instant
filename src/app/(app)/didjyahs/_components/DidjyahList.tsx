@@ -79,7 +79,7 @@ const DidjyahList: React.FC = () => {
       <div
         className={`w-full ${
           isGridView
-            ? "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3 px-4"
+            ? "grid grid-cols-4 gap-2 md:gap-3 px-4"
             : "flex flex-col items-center gap-2"
         }`}
       >

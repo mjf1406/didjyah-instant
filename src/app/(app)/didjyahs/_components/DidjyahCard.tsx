@@ -139,19 +139,39 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail, viewMode = "list" }) 
         <div className={`flex ${isGrid ? "flex-col gap-1" : "justify-between gap-3 md:gap-5"}`}>
           {/* Name and performedToday */}
           <div className="flex flex-col min-w-0">
-            <span
-              id={`name-${detail.id}`}
-              className={`font-semibold truncate ${
-                isGrid ? "text-[10px]" : "text-xs md:text-base"
-              }`}
-            >
-              {detail.name}
-              {!isGrid && detail.sinceLast && lastRecord && lastRecord.createdDate && (
-                <SinceStopwatch
-                  startDateTime={lastRecord.createdDate}
-                />
-              )}
-            </span>
+            {isGrid ? (
+              <>
+                <span
+                  id={`name-${detail.id}`}
+                  className="font-semibold truncate text-[10px]"
+                >
+                  {detail.name}
+                </span>
+                {detail.sinceLast && lastRecord && lastRecord.createdDate && (
+                  <span className="text-[8px] truncate">
+                    <SinceStopwatch
+                      startDateTime={lastRecord.createdDate}
+                    />
+                  </span>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center gap-1 min-w-0">
+                <span
+                  id={`name-${detail.id}`}
+                  className="font-semibold truncate text-xs md:text-base"
+                >
+                  {detail.name}
+                </span>
+                {detail.sinceLast && lastRecord && lastRecord.createdDate && (
+                  <span className="shrink-0 text-[10px] md:text-xs">
+                    <SinceStopwatch
+                      startDateTime={lastRecord.createdDate}
+                    />
+                  </span>
+                )}
+              </div>
+            )}
             <span
               id={`performedToday-${detail.id}`}
               className={`${isGrid ? "text-[9px]" : "text-[10px] md:text-xs"}`}

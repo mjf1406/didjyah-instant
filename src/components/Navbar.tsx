@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateDidjyahDialog } from "@/app/(app)/didjyahs/_components/CreateDidjyahDialog";
+import { ViewToggle } from "@/app/(app)/didjyahs/_components/ViewToggle";
 
 // Google login is handled on the /login page
 
@@ -114,6 +115,7 @@ export default function Navbar() {
                     <Clock />
                     {isDidjyahRoute && (
                         <db.SignedIn>
+                            <ViewToggle />
                             <CreateDidjyahDialog />
                         </db.SignedIn>
                     )}

@@ -139,7 +139,7 @@ export function CreateDidjyahDialog() {
             trigger={
                 <Button variant="default">
                     <Plus />
-                    <span className="hidden md:block">Create</span> {APP_NAME}
+                    <span className="hidden md:block">Create {APP_NAME}</span>
                 </Button>
             }
             className="overflow-y-auto sm:max-w-[425px]"

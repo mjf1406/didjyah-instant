@@ -7,7 +7,7 @@ import { CircleX } from "lucide-react";
 import DidjyahCard from "./DidjyahCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import NoDidjyahsCard from "./NoDidjyahsCard";
-import { ViewToggle, useViewMode } from "./ViewToggle";
+import { useViewMode } from "./ViewToggle";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
 
@@ -19,7 +19,7 @@ type DidjyahWithRecords = InstaQLEntity<
 
 const DidjyahList: React.FC = () => {
   const user = db.useUser();
-  const [viewMode, setViewMode] = useViewMode();
+  const [viewMode] = useViewMode();
   const { data, isLoading, error } = db.useQuery({
     didjyahs: {
       $: { where: { "owner.id": user.id } },
@@ -74,12 +74,7 @@ const DidjyahList: React.FC = () => {
   const isGridView = viewMode === "grid";
 
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-4">
-      {/* View Toggle */}
-      <div className="flex w-full max-w-4xl items-center justify-end px-4">
-        <ViewToggle value={viewMode} onValueChange={setViewMode} />
-      </div>
-
+    <div className="flex w-full flex-col items-center justify-center gap-2">
       {/* Cards Container */}
       <div
         className={`w-full ${

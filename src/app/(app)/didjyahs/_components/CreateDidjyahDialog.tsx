@@ -31,6 +31,7 @@ import FAIconPicker from "./FAIconPicker";
 import ColorPicker from "./ShadcnColorPicker";
 import type { IconName, IconPrefix } from "@fortawesome/fontawesome-svg-core";
 import { DialogDrawer } from "./DialogDrawer";
+import { Plus } from "lucide-react";
 
 const didjyahSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -135,7 +136,12 @@ export function CreateDidjyahDialog() {
         <DialogDrawer
             open={open}
             onOpenChange={setOpen}
-            trigger={<Button variant="default">Create {APP_NAME}</Button>}
+            trigger={
+                <Button variant="default">
+                    <Plus />
+                    <span className="hidden md:block">Create</span> {APP_NAME}
+                </Button>
+            }
             className="overflow-y-auto sm:max-w-[425px]"
         >
             <DialogHeader>

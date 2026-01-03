@@ -30,9 +30,10 @@ type DidjyahWithRecords = InstaQLEntity<
 
 interface DidjyahCardProps {
   detail: DidjyahWithRecords;
+  viewMode?: "list" | "grid";
 }
 
-const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
+const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail, viewMode = "list" }) => {
   const user = db.useUser();
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -47,13 +48,13 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
         <FontAwesomeIcon
           icon={[prefix as IconPrefix, iconName as IconName]}
           style={{ color: detail.iconColor ?? "#000000" }}
-          className="text-3xl md:text-5xl"
+          className={viewMode === "grid" ? "text-lg" : "text-3xl md:text-5xl"}
         />
       );
     }
   }
   // Fallback if no icon is set
-  iconComponent ??= <span className="text-xs md:text-2xl">❓</span>;
+  iconComponent ??= <span className={viewMode === "grid" ? "text-xs" : "text-xs md:text-2xl"}>❓</span>;
 
   // Filter records for today only based on createdDate (number timestamp).
   const todayStart = new Date();
@@ -107,31 +108,45 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
       })
     : null;
 
+  const isGrid = viewMode === "grid";
+
   return (
     <div
       id={`DidgYa-${detail.id}`}
-      className="flex w-[450px] overflow-hidden rounded-lg border shadow-sm"
+      className={`flex overflow-hidden rounded-lg border shadow-sm ${
+        isGrid
+          ? "w-full flex-col"
+          : "w-full max-w-[450px] flex-row"
+      }`}
     >
-      {/* Left Side: Full-height colored column with the icon */}
+      {/* Icon Section */}
       <div
         id={`emoji-${detail.id}`}
         style={{ backgroundColor: detail.color ?? "#ffffff" }}
-        className="flex w-12 items-center justify-center p-2 md:w-20 md:min-w-20 md:p-4"
+        className={`flex items-center justify-center ${
+          isGrid
+            ? "w-full h-16 p-2"
+            : "w-12 md:w-20 md:min-w-20 p-2 md:p-4"
+        }`}
       >
         {iconComponent}
       </div>
 
-      {/* Right Side: Main content */}
-      <div className="mx-auto flex w-full flex-col gap-1 p-2 md:gap-2 md:p-4">
-        <div className="flex justify-between gap-3 md:gap-5">
+      {/* Main content */}
+      <div className={`flex w-full flex-col ${
+        isGrid ? "gap-1 p-2" : "gap-1 p-2 md:gap-2 md:p-4"
+      }`}>
+        <div className={`flex ${isGrid ? "flex-col gap-1" : "justify-between gap-3 md:gap-5"}`}>
           {/* Name and performedToday */}
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <span
               id={`name-${detail.id}`}
-              className="text-xs font-semibold md:text-base"
+              className={`font-semibold truncate ${
+                isGrid ? "text-[10px]" : "text-xs md:text-base"
+              }`}
             >
-              {detail.name}{" "}
-              {detail.sinceLast && lastRecord && lastRecord.createdDate && (
+              {detail.name}
+              {!isGrid && detail.sinceLast && lastRecord && lastRecord.createdDate && (
                 <SinceStopwatch
                   startDateTime={lastRecord.createdDate}
                 />
@@ -139,31 +154,36 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
             </span>
             <span
               id={`performedToday-${detail.id}`}
-              className="text-[10px] md:text-xs"
+              className={`${isGrid ? "text-[9px]" : "text-[10px] md:text-xs"}`}
             >
               <b>
                 {todayCount} {dailyGoalNum > 0 && `/ ${dailyGoalNum}`}
-              </b>{" "}
-              {todayCount === 1 ? "time" : "times"} today{" "}
-              {detail.quantity !== 0 && detail.quantity && dailyGoalNum > 0 && (
+              </b>
+              {!isGrid && (
                 <>
-                  <b>
-                    ({(todayCount * detail.quantity).toLocaleString()} /{" "}
-                    {(dailyGoalNum * detail.quantity).toLocaleString()})
-                  </b>{" "}
-                  {detail.unit}
+                  {" "}
+                  {todayCount === 1 ? "time" : "times"} today{" "}
+                  {detail.quantity !== 0 && detail.quantity && dailyGoalNum > 0 && (
+                    <>
+                      <b>
+                        ({(todayCount * detail.quantity).toLocaleString()} /{" "}
+                        {(dailyGoalNum * detail.quantity).toLocaleString()})
+                      </b>{" "}
+                      {detail.unit}
+                    </>
+                  )}
                 </>
               )}
             </span>
           </div>
-          {/* Buttons & Location Row */}
-          <div className="mt-1 flex items-center justify-end space-x-2 md:mt-2">
+          {/* Buttons Row */}
+          <div className={`flex items-center ${isGrid ? "justify-center gap-1" : "justify-end space-x-2 md:mt-2"}`}>
             <span
               id={`stop-${detail.id}`}
               className="text-supporting-light dark:text-supporting-dark hover:text-supporting-light/80 dark:hover:text-supporting-dark/80 hidden cursor-pointer"
             >
               <FontAwesomeIcon
-                className="text-2xl text-red-600 md:text-3xl"
+                className={`text-red-600 ${isGrid ? "text-sm" : "text-2xl md:text-3xl"}`}
                 icon={["fas", "stop"]}
               />
             </span>
@@ -171,18 +191,18 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
               id={`play-${detail.id}`}
               onClick={handlePlayClick}
               variant={"ghost"}
-              size={"icon"}
+              size={isGrid ? "icon-sm" : "icon"}
             >
               <FontAwesomeIcon
-                className="text-2xl text-green-600 md:text-3xl"
+                className={`text-green-600 ${isGrid ? "text-sm" : "text-2xl md:text-3xl"}`}
                 icon={["fas", "play"]}
               />
             </Button>
             {/* Action Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="ghost" size={isGrid ? "icon-sm" : "icon"}>
+                  <MoreVertical className={isGrid ? "h-3 w-3" : "h-4 w-4"} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -211,9 +231,9 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({ detail }) => {
         {/* Progress Bar */}
         {dailyGoalNum > 0 && (
           <Progress
-            showPercentage
+            showPercentage={!isGrid}
             value={percentage}
-            className="h-3 w-full md:h-4"
+            className={`w-full ${isGrid ? "h-1.5" : "h-3 md:h-4"}`}
           />
         )}
       </div>

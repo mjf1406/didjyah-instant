@@ -7,6 +7,7 @@ import { CircleX } from "lucide-react";
 import DidjyahCard from "./DidjyahCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import NoDidjyahsCard from "./NoDidjyahsCard";
+import { ViewToggle, useViewMode } from "./ViewToggle";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
 
@@ -18,6 +19,7 @@ type DidjyahWithRecords = InstaQLEntity<
 
 const DidjyahList: React.FC = () => {
   const user = db.useUser();
+  const [viewMode, setViewMode] = useViewMode();
   const { data, isLoading, error } = db.useQuery({
     didjyahs: {
       $: { where: { "owner.id": user.id } },
@@ -69,11 +71,27 @@ const DidjyahList: React.FC = () => {
     );
   }
 
+  const isGridView = viewMode === "grid";
+
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-2">
-      {didjyahs.map((item) => (
-        <DidjyahCard key={item.id} detail={item} />
-      ))}
+    <div className="flex w-full flex-col items-center justify-center gap-4">
+      {/* View Toggle */}
+      <div className="flex w-full max-w-4xl items-center justify-end px-4">
+        <ViewToggle value={viewMode} onValueChange={setViewMode} />
+      </div>
+
+      {/* Cards Container */}
+      <div
+        className={`w-full ${
+          isGridView
+            ? "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3 px-4"
+            : "flex flex-col items-center gap-2"
+        }`}
+      >
+        {didjyahs.map((item) => (
+          <DidjyahCard key={item.id} detail={item} viewMode={viewMode} />
+        ))}
+      </div>
     </div>
   );
 };

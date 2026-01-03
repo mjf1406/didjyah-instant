@@ -7,10 +7,9 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "pushschema": "npx instant-cli@latest push schema",
         "ps": "npx instant-cli@latest push schema",
-        "pushperms": "npx instant-cli@latest push perms",
         "pp": "npx instant-cli@latest push perms",
+        "pps": "npm run ps && npm run pp",
         "bs": "npm run build && npm run start"
     },
     "dependencies": {
@@ -22,6 +21,7 @@
         "@instantdb/react": "latest",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-avatar": "^1.1.10",
+        "@radix-ui/react-collapsible": "^1.1.12",
         "@radix-ui/react-dialog": "^1.1.15",
         "@radix-ui/react-dropdown-menu": "^2.1.16",
         "@radix-ui/react-label": "^2.1.7",

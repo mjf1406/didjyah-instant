@@ -3,6 +3,7 @@
 import React from "react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { useUndo, getEntityData } from "@/lib/undo";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -39,10 +40,27 @@ const DeleteDidjyahAlertDialog: React.FC<DeleteDidjyahAlertDialogProps> = ({
   const [internalOpen, setInternalOpen] = React.useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
+  const { registerAction } = useUndo();
+  
   const handleDelete = async () => {
     try {
+      // Get previous data for undo
+      const previousData = await getEntityData("didjyahs", detail.id);
+      const ownerId = (detail as any).owner?.id;
+      
       await db.transact(db.tx.didjyahs[detail.id].delete());
       setOpen(false);
+      
+      if (previousData && ownerId) {
+        registerAction({
+          type: "delete",
+          entityType: "didjyahs",
+          entityId: detail.id,
+          previousData,
+          links: { owner: ownerId },
+          message: `Didjyah "${detail.name}" deleted`,
+        });
+      }
     } catch (error) {
       const message =
         error instanceof Error

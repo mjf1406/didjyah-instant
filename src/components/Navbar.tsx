@@ -20,6 +20,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreateDidjyahDialog } from "@/app/(app)/didjyahs/_components/CreateDidjyahDialog";
 import { ViewToggle } from "@/app/(app)/didjyahs/_components/ViewToggle";
+import { History } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Google login is handled on the /login page
 
@@ -116,6 +118,11 @@ export default function Navbar() {
                     {isDidjyahRoute && (
                         <db.SignedIn>
                             <CreateDidjyahDialog />
+                            <Link href="/didjyah/history">
+                                <Button variant="secondary" size="icon">
+                                    <History className="h-4 w-4" />
+                                </Button>
+                            </Link>
                         </db.SignedIn>
                     )}
                     <ViewToggle />

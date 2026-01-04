@@ -5,6 +5,9 @@
 import { i } from "@instantdb/react";
 
 const _schema = i.schema({
+    // We inferred 2 attributes!
+    // Take a look at this schema, and if everything looks good,
+    // run `push schema` again to enforce the types.
     entities: {
         $files: i.entity({
             path: i.string().unique().indexed(),
@@ -15,60 +18,43 @@ const _schema = i.schema({
             imageURL: i.string().optional(),
             type: i.string().optional(),
         }),
-        todos: i.entity({
-            text: i.string(),
-            done: i.boolean(),
-            createdAt: i.number(),
-        }),
-        profiles: i.entity({
-            joined: i.date(),
-            plan: i.string(),
-            firstName: i.string(),
-            lastName: i.string(),
-            googlePicture: i.string().optional(),
+        didjyahRecords: i.entity({
+            createdDate: i.number().indexed().optional(),
+            endDate: i.number().optional(),
+            inputs: i.string().optional(),
+            updatedDate: i.number().optional(),
         }),
         didjyahs: i.entity({
-            name: i.string(),
-            type: i.string().optional(),
-            icon: i.string().optional(),
             color: i.string().optional(),
-            iconColor: i.string().optional(),
-            description: i.string().optional(),
-            unit: i.string().optional(),
-            quantity: i.number().optional(),
+            createdDate: i.number().indexed().optional(),
             dailyGoal: i.number().optional(),
-            timer: i.number().optional(),
-            stopwatch: i.boolean().optional(),
+            description: i.string().optional(),
+            icon: i.string().optional(),
+            iconColor: i.string().optional(),
+            inputs: i.any().optional(),
+            name: i.string(),
+            quantity: i.number().optional(),
             sinceLast: i.boolean().optional(),
-            inputs: i.json().optional(),
-            createdDate: i.number().optional(),
+            stopwatch: i.boolean().optional(),
+            timer: i.number().optional(),
+            type: i.string().optional(),
+            unit: i.string().optional(),
             updatedDate: i.number().optional(),
-            // userId: i.string().indexed(), // This is abstracted in the didjyahsOwners link and is called 'owner'
         }),
-        didjyahRecords: i.entity({
-            inputs: i.json().optional(),
-            // test: i.string().optional(), // I think we can get rid of this
-            createdDate: i.number().optional(),
-            updatedDate: i.number().optional(),
-            endDate: i.number().optional(),
-            // didjyahId: i.string().indexed(), // This is abstracted in the didjyahRecordsDidjyahs link and is called 'didjyah'
-            // userid: i.string(), // This is abstracted in the didjyahRecordsOwners link and is called 'owner'
+        profiles: i.entity({
+            firstName: i.string(),
+            googlePicture: i.string().optional(),
+            joined: i.date(),
+            lastName: i.string(),
+            plan: i.string(),
+        }),
+        todos: i.entity({
+            createdAt: i.number(),
+            done: i.boolean(),
+            text: i.string(),
         }),
     },
     links: {
-        todosOwners: {
-            forward: {
-                on: "todos",
-                has: "one",
-                label: "owner",
-                onDelete: "cascade",
-            },
-            reverse: {
-                on: "$users",
-                has: "many",
-                label: "ownerTodos",
-            },
-        },
         $usersLinkedPrimaryUser: {
             forward: {
                 on: "$users",
@@ -82,32 +68,7 @@ const _schema = i.schema({
                 label: "linkedGuestUsers",
             },
         },
-        userProfiles: {
-            forward: {
-                on: "profiles",
-                has: "one",
-                label: "user",
-            },
-            reverse: {
-                on: "$users",
-                has: "one",
-                label: "profile",
-            },
-        },
-        didjyahsOwners: {
-            forward: {
-                on: "didjyahs",
-                has: "one",
-                label: "owner",
-                onDelete: "cascade",
-            },
-            reverse: {
-                on: "$users",
-                has: "many",
-                label: "didjyahs",
-            },
-        },
-        didjyahRecordsDidjyahs: {
+        didjyahRecordsDidjyah: {
             forward: {
                 on: "didjyahRecords",
                 has: "one",
@@ -120,7 +81,7 @@ const _schema = i.schema({
                 label: "records",
             },
         },
-        didjyahRecordsOwners: {
+        didjyahRecordsOwner: {
             forward: {
                 on: "didjyahRecords",
                 has: "one",
@@ -131,6 +92,44 @@ const _schema = i.schema({
                 on: "$users",
                 has: "many",
                 label: "didjyahRecords",
+            },
+        },
+        didjyahsOwner: {
+            forward: {
+                on: "didjyahs",
+                has: "one",
+                label: "owner",
+                onDelete: "cascade",
+            },
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "didjyahs",
+            },
+        },
+        profilesUser: {
+            forward: {
+                on: "profiles",
+                has: "one",
+                label: "user",
+            },
+            reverse: {
+                on: "$users",
+                has: "one",
+                label: "profile",
+            },
+        },
+        todosOwner: {
+            forward: {
+                on: "todos",
+                has: "one",
+                label: "owner",
+                onDelete: "cascade",
+            },
+            reverse: {
+                on: "$users",
+                has: "many",
+                label: "ownerTodos",
             },
         },
     },

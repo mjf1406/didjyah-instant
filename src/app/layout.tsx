@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import ConnectionStatusMonitor from "@/components/ConnectionStatusMonitor";
+import { UndoProvider } from "@/lib/undo";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -41,10 +42,12 @@ export default function RootLayout({
                     defaultTheme="light"
                     enableSystem={false}
                 >
-                    <ConnectionStatusMonitor />
-                    <Navbar />
-                    {children}
-                    <Toaster />
+                    <UndoProvider>
+                        <ConnectionStatusMonitor />
+                        <Navbar />
+                        {children}
+                        <Toaster />
+                    </UndoProvider>
                 </ThemeProvider>
             </body>
         </html>

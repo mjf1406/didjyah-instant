@@ -8,18 +8,20 @@ import type { IconPrefix, IconName } from "@fortawesome/fontawesome-svg-core";
 import { toast } from "sonner";
 import { id } from "@instantdb/react";
 import { db } from "@/lib/db";
+import { useUndo } from "@/lib/undo";
 import { Progress } from "@/components/ui/progress";
 import EditDidjyahDialog from "./EditDidjyahDialog";
 import { Button } from "@/components/ui/button";
 import SinceStopwatch from "./SinceStopWatch";
 import DeleteDidjyahAlertDialog from "./DeleteDidjyahAlertDialog";
+import CustomDidjyahDialog from "./CustomDidjyahDialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Trash, BarChart3 } from "lucide-react";
+import { MoreVertical, Edit, Trash, BarChart3, Calendar } from "lucide-react";
 import Link from "next/link";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
@@ -38,7 +40,9 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
     const user = db.useUser();
     const [editDialogOpen, setEditDialogOpen] = React.useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+    const [customDialogOpen, setCustomDialogOpen] = React.useState(false);
     const [menuOpen, setMenuOpen] = React.useState(false);
+    const { registerAction } = useUndo();
 
     // Long press detection
     const longPressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -110,8 +114,9 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
             lastTapTimeRef.current = 0; // Reset to prevent triple tap
             try {
                 const timestamp = Date.now();
+                const recordId = id();
                 await db.transact(
-                    db.tx.didjyahRecords[id()]
+                    db.tx.didjyahRecords[recordId]
                         .update({
                             createdDate: timestamp,
                             updatedDate: timestamp,
@@ -120,6 +125,13 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                         .link({ didjyah: detail.id })
                         .link({ owner: user.id })
                 );
+                registerAction({
+                    type: "create",
+                    entityType: "didjyahRecords",
+                    entityId: recordId,
+                    links: { didjyah: detail.id, owner: user.id },
+                    message: `Record added to "${detail.name}"`,
+                });
             } catch (error) {
                 const message =
                     error instanceof Error
@@ -394,6 +406,14 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
+                                        onClick={() =>
+                                            setCustomDialogOpen(true)
+                                        }
+                                    >
+                                        <Calendar className="mr-2 h-4 w-4" />
+                                        Custom DidjYah
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
                                         onClick={() => setEditDialogOpen(true)}
                                     >
                                         <Edit className="mr-2 h-4 w-4" />
@@ -463,6 +483,16 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                         <DropdownMenuItem
                             onClick={(e) => {
                                 e.stopPropagation();
+                                setCustomDialogOpen(true);
+                                setMenuOpen(false);
+                            }}
+                        >
+                            <Calendar className="mr-2 h-4 w-4" />
+                            Custom DidjYah
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 setEditDialogOpen(true);
                                 setMenuOpen(false);
                             }}
@@ -485,6 +515,11 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                 </DropdownMenu>
             )}
             {/* Dialogs - controlled by dropdown menu */}
+            <CustomDidjyahDialog
+                didjyah={detail}
+                open={customDialogOpen}
+                onOpenChange={setCustomDialogOpen}
+            />
             <EditDidjyahDialog
                 didjyah={detail}
                 open={editDialogOpen}

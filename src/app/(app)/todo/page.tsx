@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import GoogleSignIn from "@/app/(app)/_components/auth/GoogleSignIn";
 import { getErrorMessage } from "@/lib/errors";
 import type { Todo, UserWithGuests } from "@/lib/types";
+import { useUndo, getEntityData } from "@/lib/undo";
 
 const room = db.room("todos");
 
@@ -36,6 +37,7 @@ function AuthedApp() {
     const [notice, setNotice] = useState<string | null>(null);
     const [nonce] = useState<string>(crypto.randomUUID());
     const router = useRouter();
+    const { registerAction } = useUndo();
 
     const handleOwnedTodos = useCallback(
         (ts: Todo[]) => {
@@ -48,14 +50,24 @@ function AuthedApp() {
     const { peers } = db.rooms.usePresence(room);
     const numUsers = 1 + Object.keys(peers).length;
 
-    function addTodo(text: string) {
-        const tx = db.tx.todos[id()].update({
+    async function addTodo(text: string) {
+        const todoId = id();
+        const tx = db.tx.todos[todoId].update({
             text,
             done: false,
             createdAt: Date.now(),
         });
         setNotice(null);
-        db.transact(tx.link({ owner: user.id })).catch((err) => {
+        try {
+            await db.transact(tx.link({ owner: user.id }));
+            registerAction({
+                type: "create",
+                entityType: "todos",
+                entityId: todoId,
+                links: { owner: user.id },
+                message: `Todo "${text}" added`,
+            });
+        } catch (err) {
             const message = getErrorMessage(err);
             const permsFailed =
                 message.includes("perms-pass") ||
@@ -63,15 +75,57 @@ function AuthedApp() {
             if (permsFailed && ownedTodos.length >= 5) {
                 setNotice("Upgrade for more todos");
             }
-        });
+        }
     }
 
-    function deleteTodo(todo: Todo) {
-        db.transact(db.tx.todos[todo.id].delete());
+    async function deleteTodo(todo: Todo) {
+        // Get previous data for undo
+        const previousData = await getEntityData("todos", todo.id);
+        const ownerId = (todo as any).owner?.id || user.id;
+        
+        try {
+            await db.transact(db.tx.todos[todo.id].delete());
+            if (previousData) {
+                registerAction({
+                    type: "delete",
+                    entityType: "todos",
+                    entityId: todo.id,
+                    previousData,
+                    links: { owner: ownerId },
+                    message: `Todo "${todo.text}" deleted`,
+                });
+            }
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "An error occurred while deleting the todo.";
+            // Error toast will be handled by the error
+            throw error;
+        }
     }
 
-    function toggleDone(todo: Todo) {
-        db.transact(db.tx.todos[todo.id].update({ done: !todo.done }));
+    async function toggleDone(todo: Todo) {
+        const previousData = { done: todo.done };
+        const newDone = !todo.done;
+        
+        try {
+            await db.transact(db.tx.todos[todo.id].update({ done: newDone }));
+            registerAction({
+                type: "update",
+                entityType: "todos",
+                entityId: todo.id,
+                previousData,
+                newData: { done: newDone },
+                message: `Todo marked as ${newDone ? "done" : "not done"}`,
+            });
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "An error occurred while updating the todo.";
+            throw error;
+        }
     }
 
     function deleteCompleted(all: Todo[]) {

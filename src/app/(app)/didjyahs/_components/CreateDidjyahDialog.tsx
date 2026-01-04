@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { APP_NAME } from "@/lib/constants";
+import { useUndo } from "@/lib/undo";
 import FAIconPicker from "./FAIconPicker";
 import ColorPicker from "./ShadcnColorPicker";
 import type { IconName, IconPrefix } from "@fortawesome/fontawesome-svg-core";
@@ -54,6 +55,7 @@ type DidjyahFormValues = z.infer<typeof didjyahSchema>;
 export function CreateDidjyahDialog() {
     const user = db.useUser();
     const [open, setOpen] = React.useState(false);
+    const { registerAction } = useUndo();
 
     const form = useForm<DidjyahFormValues>({
         resolver: zodResolver(didjyahSchema),
@@ -119,6 +121,14 @@ export function CreateDidjyahDialog() {
                     .update(updateData)
                     .link({ owner: user.id })
             );
+
+            registerAction({
+                type: "create",
+                entityType: "didjyahs",
+                entityId: didjyahId,
+                links: { owner: user.id },
+                message: `Didjyah "${data.name}" created`,
+            });
 
             form.reset();
             setOpen(false);

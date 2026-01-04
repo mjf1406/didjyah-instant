@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { APP_NAME } from "@/lib/constants";
+import { useUndo, getEntityData } from "@/lib/undo";
 import FAIconPicker from "./FAIconPicker";
 import ColorPicker from "./ShadcnColorPicker";
 import { Edit } from "lucide-react";
@@ -64,6 +65,7 @@ export function EditDidjyahDialog({ didjyah, open: controlledOpen, onOpenChange:
     const [internalOpen, setInternalOpen] = React.useState(false);
     const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
     const setOpen = controlledOnOpenChange || setInternalOpen;
+    const { registerAction } = useUndo();
     const form = useForm<DidjyahFormValues>({
         resolver: zodResolver(didjyahSchema),
         defaultValues: {
@@ -125,6 +127,9 @@ export function EditDidjyahDialog({ didjyah, open: controlledOpen, onOpenChange:
 
     const onSubmit: SubmitHandler<DidjyahFormValues> = async (data) => {
         try {
+            // Get previous data for undo
+            const previousData = await getEntityData("didjyahs", didjyah.id);
+            
             // Parse the inputs JSON
             let parsedInputs: unknown = null;
             if (data.inputs) {
@@ -161,6 +166,17 @@ export function EditDidjyahDialog({ didjyah, open: controlledOpen, onOpenChange:
             if (parsedInputs !== null) updateData.inputs = parsedInputs;
 
             await db.transact(db.tx.didjyahs[didjyah.id].update(updateData));
+
+            if (previousData) {
+                registerAction({
+                    type: "update",
+                    entityType: "didjyahs",
+                    entityId: didjyah.id,
+                    previousData,
+                    newData: updateData,
+                    message: `Didjyah "${data.name}" updated`,
+                });
+            }
 
             form.reset();
             setOpen(false);

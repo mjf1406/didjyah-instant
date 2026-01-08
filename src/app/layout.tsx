@@ -45,7 +45,9 @@ export default function RootLayout({
                     <UndoProvider>
                         <ConnectionStatusMonitor />
                         <Navbar />
-                        {children}
+                        <div className="pb-16 md:pb-0">
+                            {children}
+                        </div>
                         <Toaster />
                     </UndoProvider>
                 </ThemeProvider>

@@ -2,7 +2,8 @@
 
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { db } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
     AlertDialogAction,
     AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { CircleX, Search, Trash } from "lucide-react";
+import { CircleX, Trash, Filter, X, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import EnsureProfile from "@/app/(app)/_components/user/EnsureProfile";
@@ -31,6 +32,15 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuCheckboxItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 import type { InstaQLEntity } from "@instantdb/react";
 import type { AppSchema } from "@/instant.schema";
 
@@ -40,49 +50,116 @@ type DidjyahRecordWithDidjyah = InstaQLEntity<
     { didjyah: {}; owner: {} }
 >;
 
+type Didjyah = InstaQLEntity<AppSchema, "didjyahs", {}>;
+
 const PAGE_SIZE = 20;
 
 function DidjyahHistoryContent() {
     const user = db.useUser();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    
+    // Initialize state from URL params
+    const [currentPage, setCurrentPage] = useState(
+        parseInt(searchParams.get("page") || "1", 10)
+    );
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<string | null>(null);
+    const [selectedDidjyahIds, setSelectedDidjyahIds] = useState<string[]>(() => {
+        const ids = searchParams.get("didjyahs");
+        return ids ? ids.split(",").filter(Boolean) : [];
+    });
+    const [dateRange, setDateRange] = useState<{
+        startDate: string;
+        endDate: string;
+    }>({
+        startDate: searchParams.get("startDate") || "",
+        endDate: searchParams.get("endDate") || "",
+    });
     const { registerAction } = useUndo();
 
-    // Reset to page 1 when search query changes
-    React.useEffect(() => {
+    // Query for all user's didjyahs
+    const { data: didjyahsData } = db.useQuery({
+        didjyahs: {
+            $: { where: { "owner.id": user.id } },
+        },
+    });
+
+    const didjyahs = (didjyahsData?.didjyahs || []) as Didjyah[];
+
+    // Update URL params when filters change
+    useEffect(() => {
+        const params = new URLSearchParams();
+        
+        if (selectedDidjyahIds.length > 0) {
+            params.set("didjyahs", selectedDidjyahIds.join(","));
+        }
+        
+        if (dateRange.startDate) {
+            params.set("startDate", dateRange.startDate);
+        }
+        
+        if (dateRange.endDate) {
+            params.set("endDate", dateRange.endDate);
+        }
+        
+        if (currentPage > 1) {
+            params.set("page", currentPage.toString());
+        }
+        
+        const newUrl = params.toString()
+            ? `${window.location.pathname}?${params.toString()}`
+            : window.location.pathname;
+        
+        router.replace(newUrl, { scroll: false });
+    }, [selectedDidjyahIds, dateRange.startDate, dateRange.endDate, currentPage, router]);
+
+    // Reset to page 1 when any filter changes (but not page itself)
+    useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery]);
+    }, [selectedDidjyahIds, dateRange.startDate, dateRange.endDate]);
 
-    // Query for paginated records
-    const { data, isLoading, error } = db.useQuery({
-        didjyahRecords: {
-            $: {
-                where: { "owner.id": user.id },
-                order: { createdDate: "desc" },
-                limit: PAGE_SIZE,
-                offset: (currentPage - 1) * PAGE_SIZE,
-            },
-            didjyah: {},
-        },
-    });
+    // Check if any filters are active
+    const hasActiveFilters =
+        selectedDidjyahIds.length > 0 ||
+        dateRange.startDate !== "" ||
+        dateRange.endDate !== "";
 
-    // Query for total count (for pagination when no search)
-    const { data: countData } = db.useQuery({
-        didjyahRecords: {
-            $: {
-                where: { "owner.id": user.id },
-            },
-        },
-    });
+    // Query for paginated records (only when no filters are active)
+    const { data, isLoading, error } = db.useQuery(
+        !hasActiveFilters
+            ? {
+                  didjyahRecords: {
+                      $: {
+                          where: { "owner.id": user.id },
+                          order: { createdDate: "desc" },
+                          limit: PAGE_SIZE,
+                          offset: (currentPage - 1) * PAGE_SIZE,
+                      },
+                      didjyah: {},
+                  },
+              }
+            : null
+    );
+
+    // Query for total count (for pagination when no filters)
+    const { data: countData } = db.useQuery(
+        !hasActiveFilters
+            ? {
+                  didjyahRecords: {
+                      $: {
+                          where: { "owner.id": user.id },
+                      },
+                  },
+              }
+            : null
+    );
 
     const records = (data?.didjyahRecords || []) as DidjyahRecordWithDidjyah[];
     const allRecords = (countData?.didjyahRecords || []) as DidjyahRecordWithDidjyah[];
 
-    // For search, we need to fetch all records and filter client-side
-    // So we'll use a separate query when searching
-    const { data: searchData } = db.useQuery(
-        searchQuery.trim()
+    // For filters, we need to fetch all records and filter client-side
+    const { data: filterData, isLoading: isLoadingFilters, error: filterError } = db.useQuery(
+        hasActiveFilters
             ? {
                   didjyahRecords: {
                       $: {
@@ -95,35 +172,122 @@ function DidjyahHistoryContent() {
             : null
     );
 
-    const searchRecords = (searchData?.didjyahRecords || []) as DidjyahRecordWithDidjyah[];
+    const filterRecords = (filterData?.didjyahRecords || []) as DidjyahRecordWithDidjyah[];
+    
+    // Combine loading states
+    const isLoadingData = hasActiveFilters ? isLoadingFilters : isLoading;
+    const errorData = hasActiveFilters ? filterError : error;
 
-    // When searching, use search results with client-side pagination
-    // When not searching, use server-side paginated records directly
+    // Apply all filters and pagination
     const displayRecords = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return records;
+        let filtered: DidjyahRecordWithDidjyah[];
+
+        if (hasActiveFilters) {
+            filtered = filterRecords;
+        } else {
+            filtered = records;
         }
-        const query = searchQuery.toLowerCase();
-        const filtered = searchRecords.filter(
-            (record) =>
-                record.didjyah?.name?.toLowerCase().includes(query) ?? false
-        );
+
+        // Apply didjyah filter
+        if (selectedDidjyahIds.length > 0) {
+            filtered = filtered.filter(
+                (record) =>
+                    record.didjyah?.id &&
+                    selectedDidjyahIds.includes(record.didjyah.id)
+            );
+        }
+
+        // Apply date range filter
+        if (dateRange.startDate || dateRange.endDate) {
+            filtered = filtered.filter((record) => {
+                if (!record.createdDate) return false;
+
+                const recordDate = new Date(record.createdDate);
+                recordDate.setHours(0, 0, 0, 0);
+
+                if (dateRange.startDate) {
+                    const startDate = new Date(dateRange.startDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    if (recordDate < startDate) return false;
+                }
+
+                if (dateRange.endDate) {
+                    const endDate = new Date(dateRange.endDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    if (recordDate > endDate) return false;
+                }
+
+                return true;
+            });
+        }
+
+        // Apply pagination
         const startIndex = (currentPage - 1) * PAGE_SIZE;
         return filtered.slice(startIndex, startIndex + PAGE_SIZE);
-    }, [searchQuery, records, searchRecords, currentPage]);
+    }, [
+        hasActiveFilters,
+        records,
+        filterRecords,
+        selectedDidjyahIds,
+        dateRange.startDate,
+        dateRange.endDate,
+        currentPage,
+    ]);
 
-    const totalRecords = searchQuery.trim()
-        ? searchRecords.filter(
-              (record) =>
-                  record.didjyah?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
-          ).length
-        : allRecords.length;
+    // Calculate total records for pagination
+    const totalRecords = useMemo(() => {
+        if (!hasActiveFilters) {
+            return allRecords.length;
+        }
+
+        let filtered = filterRecords;
+
+        if (selectedDidjyahIds.length > 0) {
+            filtered = filtered.filter(
+                (record) =>
+                    record.didjyah?.id &&
+                    selectedDidjyahIds.includes(record.didjyah.id)
+            );
+        }
+
+        if (dateRange.startDate || dateRange.endDate) {
+            filtered = filtered.filter((record) => {
+                if (!record.createdDate) return false;
+
+                const recordDate = new Date(record.createdDate);
+                recordDate.setHours(0, 0, 0, 0);
+
+                if (dateRange.startDate) {
+                    const startDate = new Date(dateRange.startDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    if (recordDate < startDate) return false;
+                }
+
+        if (dateRange.endDate) {
+            const endDate = new Date(dateRange.endDate);
+            endDate.setHours(23, 59, 59, 999);
+            if (recordDate > endDate) return false;
+        }
+
+        return true;
+    });
+}
+
+return filtered.length;
+    }, [
+        hasActiveFilters,
+        allRecords,
+        filterRecords,
+        selectedDidjyahIds,
+        dateRange.startDate,
+        dateRange.endDate,
+    ]);
 
     const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
 
     const handleDelete = async (recordId: string) => {
         try {
-            const allRecordsToSearch = searchQuery.trim() ? searchRecords : allRecords;
+            const allRecordsToSearch = hasActiveFilters ? filterRecords : allRecords;
             const record = allRecordsToSearch.find((r) => r.id === recordId);
             if (!record) return;
 
@@ -166,7 +330,33 @@ function DidjyahHistoryContent() {
         });
     };
 
-    if (isLoading) {
+    const handleDidjyahToggle = (didjyahId: string) => {
+        setSelectedDidjyahIds((prev) =>
+            prev.includes(didjyahId)
+                ? prev.filter((id) => id !== didjyahId)
+                : [...prev, didjyahId]
+        );
+    };
+
+    const handleSelectAllDidjyahs = () => {
+        if (selectedDidjyahIds.length === didjyahs.length) {
+            setSelectedDidjyahIds([]);
+        } else {
+            setSelectedDidjyahIds(didjyahs.map((d) => d.id));
+        }
+    };
+
+    const handleClearFilters = () => {
+        setSelectedDidjyahIds([]);
+        setDateRange({ startDate: "", endDate: "" });
+        setCurrentPage(1);
+    };
+
+    const activeFilterCount =
+        (selectedDidjyahIds.length > 0 ? 1 : 0) +
+        (dateRange.startDate || dateRange.endDate ? 1 : 0);
+
+    if (isLoadingData) {
         return (
             <div className="m-auto flex w-full max-w-4xl items-center justify-center lg:min-w-3xl">
                 <Skeleton className="h-8 w-32" />
@@ -174,7 +364,7 @@ function DidjyahHistoryContent() {
         );
     }
 
-    if (error) {
+    if (errorData) {
         return (
             <div className="m-auto flex h-auto w-full items-center justify-center">
                 <div className="max-w-5xl px-4">
@@ -189,8 +379,8 @@ function DidjyahHistoryContent() {
                         <div className="w-full">
                             <AlertTitle>Error</AlertTitle>
                             <AlertDescription>
-                                {error instanceof Error
-                                    ? error.message
+                                {errorData instanceof Error
+                                    ? errorData.message
                                     : "An error occurred"}
                             </AlertDescription>
                         </div>
@@ -207,25 +397,159 @@ function DidjyahHistoryContent() {
                     <h1 className="mb-4 text-2xl font-bold">
                         DidjYah Records History
                     </h1>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Search by DidjYah name..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9"
-                        />
+
+                    {/* Filters Section */}
+                    <div className="mb-4 space-y-4">
+                        <div className="flex flex-wrap items-end gap-4">
+                            {/* Didjyah Multi-Select Dropdown */}
+                            <div className="flex-1 min-w-[200px]">
+                                <Label htmlFor="didjyah-filter" className="mb-2 block text-sm">
+                                    Filter by DidjYah
+                                </Label>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-between"
+                                            id="didjyah-filter"
+                                        >
+                                            <span className="truncate">
+                                                {selectedDidjyahIds.length === 0
+                                                    ? "All Didjyahs"
+                                                    : selectedDidjyahIds.length === 1
+                                                    ? didjyahs.find(
+                                                          (d) =>
+                                                              d.id ===
+                                                              selectedDidjyahIds[0]
+                                                      )?.name || "1 DidjYah"
+                                                    : `${selectedDidjyahIds.length} Didjyahs selected`}
+                                            </span>
+                                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-[200px]">
+                                        <DropdownMenuLabel>
+                                            Select Didjyahs
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuCheckboxItem
+                                            checked={
+                                                selectedDidjyahIds.length ===
+                                                didjyahs.length &&
+                                                didjyahs.length > 0
+                                            }
+                                            onCheckedChange={
+                                                handleSelectAllDidjyahs
+                                            }
+                                        >
+                                            Select All
+                                        </DropdownMenuCheckboxItem>
+                                        <DropdownMenuSeparator />
+                                        {didjyahs.map((didjyah) => (
+                                            <DropdownMenuCheckboxItem
+                                                key={didjyah.id}
+                                                checked={selectedDidjyahIds.includes(
+                                                    didjyah.id
+                                                )}
+                                                onCheckedChange={() =>
+                                                    handleDidjyahToggle(
+                                                        didjyah.id
+                                                    )
+                                                }
+                                            >
+                                                {didjyah.name}
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+
+                            {/* Date Range Filter */}
+                            <div className="flex-1 min-w-[200px]">
+                                <div className="flex flex-col gap-2 md:flex-row md:gap-2">
+                                    <div className="flex-1">
+                                        <Label htmlFor="date-from" className="mb-2 block text-sm">
+                                            From Date
+                                        </Label>
+                                        <Input
+                                            id="date-from"
+                                            type="date"
+                                            placeholder="From"
+                                            value={dateRange.startDate}
+                                            onChange={(e) =>
+                                                setDateRange((prev) => ({
+                                                    ...prev,
+                                                    startDate: e.target.value,
+                                                }))
+                                            }
+                                            className="w-full"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <Label htmlFor="date-to" className="mb-2 block text-sm">
+                                            To Date
+                                        </Label>
+                                        <Input
+                                            id="date-to"
+                                            type="date"
+                                            placeholder="To"
+                                            value={dateRange.endDate}
+                                            onChange={(e) =>
+                                                setDateRange((prev) => ({
+                                                    ...prev,
+                                                    endDate: e.target.value,
+                                                }))
+                                            }
+                                            className="w-full"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Clear Filters Button */}
+                            {activeFilterCount > 0 && (
+                                <div>
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleClearFilters}
+                                        className="whitespace-nowrap"
+                                    >
+                                        <X className="mr-2 h-4 w-4" />
+                                        Clear Filters
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Active Filters Indicator */}
+                        {activeFilterCount > 0 && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Filter className="h-4 w-4" />
+                                <span>
+                                    {activeFilterCount} filter
+                                    {activeFilterCount !== 1 ? "s" : ""} active
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {displayRecords.length === 0 ? (
                     <div className="rounded-lg border border-gray-200 p-8 text-center dark:border-gray-800">
                         <p className="text-muted-foreground">
-                            {searchQuery
-                                ? `No records found matching "${searchQuery}"`
+                            {hasActiveFilters
+                                ? "No records found matching your filters"
                                 : "No records found"}
                         </p>
+                        {hasActiveFilters && (
+                            <Button
+                                variant="link"
+                                onClick={handleClearFilters}
+                                className="mt-2"
+                            >
+                                Clear all filters
+                            </Button>
+                        )}
                     </div>
                 ) : (
                     <>
@@ -435,7 +759,15 @@ export default function DidjyahHistoryPage() {
         <>
             <db.SignedIn>
                 <EnsureProfile />
-                <DidjyahHistoryContent />
+                <Suspense
+                    fallback={
+                        <div className="m-auto flex w-full max-w-4xl items-center justify-center lg:min-w-3xl">
+                            <Skeleton className="h-8 w-32" />
+                        </div>
+                    }
+                >
+                    <DidjyahHistoryContent />
+                </Suspense>
             </db.SignedIn>
             <db.SignedOut>
                 <div className="flex min-h-screen items-center justify-center">

@@ -58,90 +58,135 @@ export default function Navbar() {
     const isDidjyahRoute = pathname === "/didjyah";
 
     return (
-        <header className="border-b border-gray-200 dark:border-gray-800">
-            <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-                {/* Left: Logo */}
-                <div className="flex items-center gap-2">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2"
-                    >
-                        <Image
-                            src="/didjyah-logo.svg"
-                            alt="DidjYah"
-                            width={32}
-                            height={32}
-                        />
-                        <span className="font-semibold tracking-tight">
+        <>
+            <header className="border-b border-gray-200 dark:border-gray-800">
+                <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+                    {/* Left: Logo */}
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href="/"
+                            className="flex items-center gap-2"
+                        >
+                            <Image
+                                src="/didjyah-logo.svg"
+                                alt="DidjYah"
+                                width={32}
+                                height={32}
+                            />
+                            <span className="font-semibold tracking-tight">
+                                DidjYah
+                            </span>
+                        </Link>
+                    </div>
+
+                    {/* Center: Links */}
+                    <nav className="hidden md:flex items-center gap-6 text-sm">
+                        <Link
+                            href="/todo"
+                            className="hover:underline"
+                        >
+                            Todos
+                        </Link>
+                        <Link
+                            href="/didjyah"
+                            className="hover:underline"
+                        >
                             DidjYah
-                        </span>
-                    </Link>
+                        </Link>
+                        <Link
+                            href="/about"
+                            className="hover:underline"
+                        >
+                            About
+                        </Link>
+                        <Link
+                            href="/pricing"
+                            className="hover:underline"
+                        >
+                            Pricing
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className="hover:underline"
+                        >
+                            Contact
+                        </Link>
+                    </nav>
+
+                    {/* Right: Auth - Desktop only */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <Clock />
+                        {isDidjyahRoute && (
+                            <db.SignedIn>
+                                <CreateDidjyahDialog />
+                                <Link href="/didjyah/history">
+                                    <Button variant="secondary" size="icon">
+                                        <History className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            </db.SignedIn>
+                        )}
+                        <ViewToggle />
+                        <ThemeToggle />
+                        <db.SignedOut>
+                            <Link
+                                href="/app/login"
+                                className="rounded-full border border-gray-200 px-3 py-1 text-sm hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900"
+                            >
+                                Log in
+                            </Link>
+                        </db.SignedOut>
+
+                        <db.SignedIn>
+                            <NavbarSignedIn />
+                        </db.SignedIn>
+                    </div>
+
+                    {/* Right: Mobile - Clock and Theme only */}
+                    <div className="flex md:hidden items-center gap-3">
+                        <Clock />
+                        <ThemeToggle />
+                    </div>
                 </div>
+            </header>
 
-                {/* Center: Links */}
-                <nav className="hidden md:flex items-center gap-6 text-sm">
-                    <Link
-                        href="/todo"
-                        className="hover:underline"
-                    >
-                        Todos
-                    </Link>
-                    <Link
-                        href="/didjyah"
-                        className="hover:underline"
-                    >
-                        DidjYah
-                    </Link>
-                    <Link
-                        href="/about"
-                        className="hover:underline"
-                    >
-                        About
-                    </Link>
-                    <Link
-                        href="/pricing"
-                        className="hover:underline"
-                    >
-                        Pricing
-                    </Link>
-                    <Link
-                        href="/contact"
-                        className="hover:underline"
-                    >
-                        Contact
-                    </Link>
-                </nav>
-
-                {/* Right: Auth */}
-                <div className="flex items-center gap-3">
-                    <Clock />
+            {/* Bottom Navbar - Mobile only */}
+            <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-background dark:border-gray-800 md:hidden">
+                <div className="mx-auto flex h-16 max-w-6xl items-center justify-around px-4">
                     {isDidjyahRoute && (
                         <db.SignedIn>
-                            <CreateDidjyahDialog />
-                            <Link href="/didjyah/history">
-                                <Button variant="secondary" size="icon">
-                                    <History className="h-4 w-4" />
+                            <div className="flex flex-col items-center justify-center gap-1">
+                                <CreateDidjyahDialog />
+                                <span className="text-xs">Create</span>
+                            </div>
+                            <Link
+                                href="/didjyah/history"
+                                className="flex flex-col items-center justify-center gap-1"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-10 w-10"
+                                >
+                                    <History className="h-5 w-5" />
                                 </Button>
+                                <span className="text-xs">History</span>
                             </Link>
+                            <div className="flex flex-col items-center justify-center gap-1">
+                                <ViewToggle />
+                                <span className="text-xs">View</span>
+                            </div>
                         </db.SignedIn>
                     )}
-                    <ViewToggle />
-                    <ThemeToggle />
-                    <db.SignedOut>
-                        <Link
-                            href="/app/login"
-                            className="rounded-full border border-gray-200 px-3 py-1 text-sm hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900"
-                        >
-                            Log in
-                        </Link>
-                    </db.SignedOut>
-
                     <db.SignedIn>
-                        <NavbarSignedIn />
+                        <div className="flex flex-col items-center justify-center gap-1">
+                            <NavbarSignedIn />
+                            <span className="text-xs">Profile</span>
+                        </div>
                     </db.SignedIn>
                 </div>
-            </div>
-        </header>
+            </nav>
+        </>
     );
 }
 

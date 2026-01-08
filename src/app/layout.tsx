@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Create Instant App",
-    description: "Instant DB Starter App",
+    title: "DidjYah",
+    description: "DidjYah is a app to track all the things you do.",
 };
 
 export default function RootLayout({
@@ -45,9 +45,7 @@ export default function RootLayout({
                     <UndoProvider>
                         <ConnectionStatusMonitor />
                         <Navbar />
-                        <div className="pb-16 md:pb-0">
-                            {children}
-                        </div>
+                        <div className="pb-16 md:pb-0">{children}</div>
                         <Toaster />
                     </UndoProvider>
                 </ThemeProvider>

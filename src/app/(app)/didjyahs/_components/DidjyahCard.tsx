@@ -64,7 +64,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                     icon={[prefix as IconPrefix, iconName as IconName]}
                     style={{ color: detail.iconColor ?? "#000000" }}
                     className={
-                        viewMode === "grid" ? "text-lg" : "text-3xl md:text-5xl"
+                        viewMode === "grid" ? "text-lg lg:text-2xl" : "text-3xl md:text-5xl"
                     }
                 />
             );
@@ -73,7 +73,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
     // Fallback if no icon is set
     iconComponent ??= (
         <span
-            className={viewMode === "grid" ? "text-sm" : "text-xs md:text-2xl"}
+            className={viewMode === "grid" ? "text-sm lg:text-xl" : "text-xs md:text-2xl"}
         >
             ❓
         </span>
@@ -259,7 +259,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                 style={{ backgroundColor: detail.color ?? "#ffffff" }}
                 className={`flex items-center justify-center ${
                     isGrid
-                        ? "w-full h-12 p-1.5"
+                        ? "w-full h-12 lg:h-16 p-1.5 lg:p-2"
                         : "w-12 md:w-20 md:min-w-20 p-2 md:p-4"
                 }`}
             >
@@ -269,7 +269,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
             {/* Main content */}
             <div
                 className={`flex w-full flex-col ${
-                    isGrid ? "gap-0.5 p-1.5" : "gap-1 p-2 md:gap-2 md:p-4"
+                    isGrid ? "gap-0.5 p-1.5 lg:p-2" : "gap-1 p-2 md:gap-2 md:p-4"
                 }`}
             >
                 <div
@@ -285,14 +285,14 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                             <>
                                 <span
                                     id={`name-${detail.id}`}
-                                    className="font-semibold truncate text-[10px]"
+                                    className="font-semibold truncate text-[10px] lg:text-sm"
                                 >
                                     {detail.name}
                                 </span>
                                 {detail.sinceLast &&
                                     lastRecord &&
                                     lastRecord.createdDate && (
-                                        <span className="text-[8px] truncate">
+                                        <span className="text-[8px] lg:text-xs truncate">
                                             <SinceStopwatch
                                                 startDateTime={
                                                     lastRecord.createdDate
@@ -325,7 +325,7 @@ const DidjyahCard: React.FC<DidjyahCardProps> = ({
                         <span
                             id={`performedToday-${detail.id}`}
                             className={`${
-                                isGrid ? "text-[9px]" : "text-[10px] md:text-xs"
+                                isGrid ? "text-[9px] lg:text-xs" : "text-[10px] md:text-xs"
                             }`}
                         >
                             <b>
